@@ -1,2 +1,2 @@
-# cheerlights-tree-lights
+# neopixel-cheerlights
 Sparkling LED CheerLights display
