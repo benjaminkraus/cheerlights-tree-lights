@@ -98,6 +98,7 @@ void loop() {
         
         if (color != thingSpeakColor && !colorUpdating) {
             thingSpeakColor = color;
+            Particle.publish("new-thingspeak-color", thingSpeakColor, 60, PRIVATE);
             setColor(color);
         }
     }
@@ -106,6 +107,7 @@ void loop() {
 int setManualColor(String color) {
     manualColor = color;
     newManualColor = true;
+    Particle.publish("new-manual-color", manualColor, 60, PRIVATE);
     return 0;
 }
 
@@ -162,6 +164,7 @@ void setColor(String color)
         doColorUpdate = true;
         colorUpdating = true;
         currentColor = color;
+        Particle.publish("updating-color", currentColor, 60, PRIVATE);
         
         // Look through the list of colors to find the one that was requested
         for(int iColor = 0; iColor <= 12; iColor++)
