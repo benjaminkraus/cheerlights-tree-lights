@@ -33,7 +33,8 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(Pixels, D0);
 unsigned long previousMillis = 0;
 unsigned long previousTwinkleMillis = 0;
 unsigned long previousColorUpdateMillis = 0;
-const long Twinkleinterval = 10;
+bool twinkle = true;
+long twinkleInterval = 10;
 const long interval = 5000;
 const long colorUpdateInterval = 250;
 
@@ -82,6 +83,9 @@ void setup() {
     
     // Register function to update the manual color.
     Particle.function("setColor", setManualColor);
+    
+    // Register function to update the twinkle interval.
+    Particle.function("setTwinkle", setTwinkleInterval);
 }
 
 void loop() {
@@ -111,11 +115,32 @@ int setManualColor(String color) {
     return 0;
 }
 
+int setTwinkleInterval(String intervalStr) {
+    bool oldTwinkle = twinkle;
+    long newInterval = atol(intervalStr);
+    if (newInterval >= 0) {
+        twinkle = true;
+        if (newInterval > 0) {
+            twinkleInterval = newInterval;
+        }
+        if (!oldTwinkle) {
+            Particle.publish("enabling-twinkle", NULL, 60, PRIVATE);
+        }
+        Particle.publish("twinkle-interval", String(twinkleInterval) + " ms", 60, PRIVATE);
+    }  else {
+        twinkle = false;
+        if (oldTwinkle) {
+            Particle.publish("disabling-twinkle", NULL, 60, PRIVATE);
+        }
+    }
+    return 0;
+}
+
 os_thread_return_t update() {
     while(true) {
         unsigned long currentMillis = millis();
         
-        if (currentMillis - previousTwinkleMillis >= Twinkleinterval) {
+        if (currentMillis - previousTwinkleMillis >= twinkleInterval) {
             previousTwinkleMillis = currentMillis;
             twinkleLEDs();
         }
@@ -189,16 +214,21 @@ bool setColor(String color)
 
 void twinkleLEDs() {
     for(uint16_t n=0; n<strip.numPixels(); n++) {
-        intensity[n] = intensity[n]*fadeRate[n];
-        if(intensity[n]<0.01){
-            intensity[n] = random(50,1000)/1000.0;
-            fadeRate[n] = random(800,990)/1000.0;
-        }
         int r = ledColors[n][0];
         int g = ledColors[n][1];
         int b = ledColors[n][2];
         
-        strip.setPixelColor(n,r*intensity[n],g*intensity[n],b*intensity[n]);
+        if (twinkle) {
+            intensity[n] = intensity[n]*fadeRate[n];
+            if(intensity[n]<0.01){
+                intensity[n] = random(50,1000)/1000.0;
+                fadeRate[n] = random(800,990)/1000.0;
+            }
+            
+            strip.setPixelColor(n,r*intensity[n],g*intensity[n],b*intensity[n]);
+        } else {
+            strip.setPixelColor(n,r,g,b);
+        }
     }
     
     strip.show();
