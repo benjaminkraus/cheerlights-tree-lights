@@ -89,7 +89,7 @@ void loop() {
     
     if (newManualColor && !colorUpdating) {
         newManualColor = false;
-        setColor(manualColor);
+        updateColor(manualColor);
     } else if (!colorUpdating && (currentMillis - previousMillis >= interval)) {
         previousMillis = currentMillis;
         
@@ -99,7 +99,7 @@ void loop() {
         if (color != thingSpeakColor && !colorUpdating) {
             thingSpeakColor = color;
             Particle.publish("new-thingspeak-color", thingSpeakColor, 60, PRIVATE);
-            setColor(color);
+            updateColor(color);
         }
     }
 }
@@ -158,28 +158,33 @@ int colorRGB[][3] = {     0,  0,  0, // none:        0,  0,  0
                         255,128,  0, // yellow:    255,255,  0
                         255, 32,  0};// orange:    255,165,  0
 
-void setColor(String color)
-{
+void updateColor(String color) {
     if (color != currentColor) {
-        doColorUpdate = true;
-        colorUpdating = true;
-        currentColor = color;
-        Particle.publish("updating-color", currentColor, 60, PRIVATE);
-        
-        // Look through the list of colors to find the one that was requested
-        for(int iColor = 0; iColor <= 12; iColor++)
-        {
-            if(color == colorName[iColor])
-            {
-                // When it matches, look up the RGB values for that color in the table,
-                // and write the red, green, and blue values.
-                colorRed = colorRGB[iColor][0];
-                colorGreen = colorRGB[iColor][1];
-                colorBlue = colorRGB[iColor][2];
-                return;
-            }
+        if (setColor(color)) {
+            doColorUpdate = true;
+            colorUpdating = true;
+            currentColor = color;
+            Particle.publish("updating-color", currentColor, 60, PRIVATE);
         }
     }
+}
+
+bool setColor(String color)
+{
+    // Look through the list of colors to find the one that was requested
+    for(int iColor = 0; iColor <= 12; iColor++)
+    {
+        if(color == colorName[iColor])
+        {
+            // When it matches, look up the RGB values for that color in the table,
+            // and write the red, green, and blue values.
+            colorRed = colorRGB[iColor][0];
+            colorGreen = colorRGB[iColor][1];
+            colorBlue = colorRGB[iColor][2];
+            return true;
+        }
+    }
+    return false; // No matching color found.
 }
 
 void twinkleLEDs() {
