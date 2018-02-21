@@ -126,19 +126,19 @@ os_thread_return_t update() {
 String colorName[] = {"none","red","pink","green","blue","cyan","white","warmwhite","oldlace","purple","magenta","yellow","orange"};
 
 // Map of RGB values for each of the Cheerlight color names
-int colorRGB[][3] = {     0,  0,  0, // "none"
-                        150,  0,  0, // "red"
-                        255,150,150, // "pink" //100,8,58, 255,20,147,
-                          0,150,  0, // "green"
-                          0, 64,128, // "blue"
-                          0,150,125, // 0, 255,255, // "cyan",
-                        150,150, 75, //255, 255,255, // "white",
-                        150,150, 50, //255,222,173,// 255, 245, 230, // "warmwhite",
-                        150,150, 50, //255, 245, 230, // "oldlace",
-                        150,  0,150, // 255,20,147,//128,  0, 25, // "purple",
-                        255, 20,147, // 100,0,100,//255,  0, 255, // "magenta",
-                        150,100,  0, //255, 255,  0, // "yellow",
-                        150, 45,  0};//255, 140,  0}; // "orange"};
+int colorRGB[][3] = {     0,  0,  0, // none:        0,  0,  0
+                        255,  0,  0, // red:       255,  0,  0
+                        255, 64, 64, // pink:      255,192,203
+                          0, 64,  0, // green:       0,128,  0
+                          0,  0,255, // blue:        0,  0,255
+                          0,255,192, // cyan:        0,255,255
+                        255,160,128, // white:     255,255,255
+                        255,160, 32, // warmwhite: 255,222,173
+                        255,160, 64, // oldlace:   253,245,230
+                        128,  0,128, // purple:    128,  0,128
+                        255,  0, 32, // magenta:   255,  0,255
+                        255,128,  0, // yellow:    255,255,  0
+                        255, 32,  0};// orange:    255,165,  0
 
 void setColor(String color)
 {
