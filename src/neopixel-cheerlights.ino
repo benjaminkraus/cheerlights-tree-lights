@@ -44,6 +44,9 @@ float intensity[Pixels];
 float fadeRate[Pixels];
 
 String currentColor;
+String thingSpeakColor;
+String manualColor;
+bool newManualColor = false;
 
 int ledColors [Pixels][3];
 int currentLED = 0;
@@ -71,26 +74,39 @@ void setup() {
     }
     
     updateThread = new Thread("update", update);
+    
+    // Register variables that store the current colors.
+    Particle.variable("currentColor", currentColor);
+    Particle.variable("thingColor", thingSpeakColor);
+    Particle.variable("manualColor", manualColor);
+    
+    // Register function to update the manual color.
+    Particle.function("setColor", setManualColor);
 }
 
 void loop() {
     unsigned long currentMillis = millis();
     
-    if (currentMillis - previousMillis >= interval) {
+    if (newManualColor && !colorUpdating) {
+        newManualColor = false;
+        setColor(manualColor);
+    } else if (!colorUpdating && (currentMillis - previousMillis >= interval)) {
         previousMillis = currentMillis;
         
         // Read the latest value from field 1 of channel 1417
         String color = ThingSpeak.readStringField(cheerLightsChannelNumber, 1);
         
-        if (color != currentColor && !colorUpdating) {
+        if (color != thingSpeakColor && !colorUpdating) {
+            thingSpeakColor = color;
             setColor(color);
-            
-            doColorUpdate = true;
-            colorUpdating = true;
-            
-            currentColor = color;
         }
     }
+}
+
+int setManualColor(String color) {
+    manualColor = color;
+    newManualColor = true;
+    return 0;
 }
 
 os_thread_return_t update() {
@@ -142,17 +158,23 @@ int colorRGB[][3] = {     0,  0,  0, // none:        0,  0,  0
 
 void setColor(String color)
 {
-    // Look through the list of colors to find the one that was requested
-    for(int iColor = 0; iColor <= 12; iColor++)
-    {
-        if(color == colorName[iColor])
+    if (color != currentColor) {
+        doColorUpdate = true;
+        colorUpdating = true;
+        currentColor = color;
+        
+        // Look through the list of colors to find the one that was requested
+        for(int iColor = 0; iColor <= 12; iColor++)
         {
-            // When it matches, look up the RGB values for that color in the table,
-            // and write the red, green, and blue values.
-            colorRed = colorRGB[iColor][0];
-            colorGreen = colorRGB[iColor][1];
-            colorBlue = colorRGB[iColor][2];
-            return;
+            if(color == colorName[iColor])
+            {
+                // When it matches, look up the RGB values for that color in the table,
+                // and write the red, green, and blue values.
+                colorRed = colorRGB[iColor][0];
+                colorGreen = colorRGB[iColor][1];
+                colorBlue = colorRGB[iColor][2];
+                return;
+            }
         }
     }
 }
@@ -167,7 +189,7 @@ void twinkleLEDs() {
         int r = ledColors[n][0];
         int g = ledColors[n][1];
         int b = ledColors[n][2];
-
+        
         strip.setPixelColor(n,r*intensity[n],g*intensity[n],b*intensity[n]);
     }
     
